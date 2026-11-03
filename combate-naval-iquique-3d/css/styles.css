@@ -1,0 +1,831 @@
+/* ==========================================================================
+   ESTILOS - COMBATE NAVAL DE IQUIQUE Y PUNTA GRUESA 3D (1879)
+   Estética Naval Histórica del Siglo XIX con Acabados Profesionales
+   ========================================================================== */
+
+:root {
+  --navy-deep: #0a131c;
+  --navy-dark: #121f2d;
+  --navy-glass: rgba(14, 26, 39, 0.88);
+  --brass-gold: #d4af37;
+  --brass-bright: #f3cf65;
+  --brass-dark: #8c6d1f;
+  --iron-grey: #2c343b;
+  --chile-red: #d52b1e;
+  --chile-blue: #0039a6;
+  --peru-red: #d91023;
+  --paper-parchment: #f4ecd8;
+  --text-primary: #f0f4f8;
+  --text-secondary: #c2cbd4;
+  --danger-crimson: #c0292b;
+  --success-emerald: #27ae60;
+  --gold-glow: 0 0 16px rgba(212, 175, 55, 0.45);
+  --shadow-dramatic: 0 12px 36px rgba(0, 0, 0, 0.75);
+  --font-serif: 'Cinzel', 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--navy-deep);
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#canvas-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   HUD Y CAPAS DE INTERFAZ
+   ========================================================================== */
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Permitir clics en elementos interactivos */
+button, input, select, textarea, .interactive {
+  pointer-events: auto;
+}
+
+/* Barra Superior del HUD */
+.hud-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: linear-gradient(180deg, rgba(8, 14, 22, 0.94) 0%, rgba(14, 26, 39, 0.75) 85%, transparent 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+  backdrop-filter: blur(8px);
+}
+
+.ship-status-widget {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ship-status-widget.enemy {
+  align-items: flex-end;
+}
+
+.ship-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flag-icon {
+  font-size: 1.1rem;
+}
+
+.ship-name-label {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  letter-spacing: 0.8px;
+  color: var(--paper-parchment);
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+
+.health-meter-frame {
+  width: 100%;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid var(--brass-dark);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+  position: relative;
+}
+
+.health-meter-fill {
+  height: 100%;
+  width: 100%;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.player-fill {
+  background: linear-gradient(90deg, #1b5e20, #4caf50);
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+}
+
+.enemy-fill {
+  background: linear-gradient(90deg, #b71c1c, #f44336);
+  box-shadow: 0 0 10px rgba(244, 67, 54, 0.6);
+}
+
+/* Centro: Título de la Batalla */
+.hud-center-brand {
+  text-align: center;
+}
+
+.main-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 2.2px;
+  color: var(--brass-bright);
+  text-shadow: var(--gold-glow), 0 2px 4px rgba(0,0,0,0.9);
+  text-transform: uppercase;
+}
+
+.battle-meta-subtitle {
+  font-size: 0.78rem;
+  letter-spacing: 1.4px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.sudden-death-pill {
+  display: inline-block;
+  background: rgba(192, 41, 43, 0.35);
+  border: 1px solid var(--danger-crimson);
+  color: #ff9999;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 4px rgba(192, 41, 43, 0.4); }
+  50% { box-shadow: 0 0 12px rgba(192, 41, 43, 0.85); }
+  100% { box-shadow: 0 0 4px rgba(192, 41, 43, 0.4); }
+}
+
+/* Barra Inferior del HUD */
+.hud-bottom-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: linear-gradient(0deg, rgba(8, 14, 22, 0.95) 0%, rgba(14, 26, 39, 0.65) 80%, transparent 100%);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stage-badge {
+  font-family: var(--font-serif);
+  font-size: 0.85rem;
+  color: var(--brass-gold);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  letter-spacing: 1px;
+}
+
+/* Botones con estilo náutico clásico */
+.hud-btn {
+  background: rgba(20, 35, 50, 0.85);
+  color: var(--text-primary);
+  border: 1px solid var(--brass-dark);
+  padding: 7px 14px;
+  font-family: var(--font-serif);
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+}
+
+.hud-btn:hover {
+  background: rgba(35, 58, 82, 0.95);
+  border-color: var(--brass-bright);
+  color: var(--brass-bright);
+  box-shadow: var(--gold-glow);
+  transform: translateY(-1px);
+}
+
+.hud-btn.active {
+  background: linear-gradient(180deg, #3c2f14 0%, #201a08 100%);
+  border-color: var(--brass-bright);
+  color: var(--brass-bright);
+  box-shadow: inset 0 0 8px rgba(243, 207, 101, 0.4);
+}
+
+/* ==========================================================================
+   CUADRO DE PREGUNTAS (CENTRAL Y PROTAGÓNICO)
+   ========================================================================== */
+.question-container-wrapper {
+  position: absolute;
+  bottom: 85px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 820px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.question-box {
+  pointer-events: auto;
+  background: var(--navy-glass);
+  border: 2px solid var(--brass-gold);
+  border-radius: 6px;
+  box-shadow: var(--shadow-dramatic), var(--gold-glow);
+  padding: 20px 24px;
+  backdrop-filter: blur(14px);
+  position: relative;
+  animation: slide-up 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
+.question-category {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  color: var(--brass-bright);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.question-timer-hint {
+  font-size: 0.72rem;
+  color: #ff9999;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.question-prompt {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--paper-parchment);
+  margin-bottom: 18px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 680px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.option-card {
+  background: rgba(18, 30, 44, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 4px;
+  padding: 12px 14px;
+  text-align: left;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.option-card:hover {
+  background: rgba(30, 50, 72, 0.95);
+  border-color: var(--brass-bright);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.6), var(--gold-glow);
+}
+
+.opt-key {
+  font-family: var(--font-serif);
+  font-weight: 800;
+  color: var(--brass-bright);
+  font-size: 0.85rem;
+  min-width: 44px;
+}
+
+.opt-label {
+  flex: 1;
+}
+
+/* Estados de feedback inmediato */
+.option-card.correct {
+  background: rgba(39, 174, 96, 0.45) !important;
+  border-color: #2ecc71 !important;
+  box-shadow: 0 0 16px rgba(46, 204, 113, 0.7) !important;
+}
+
+.option-card.incorrect {
+  background: rgba(192, 41, 43, 0.55) !important;
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 16px rgba(231, 76, 60, 0.8) !important;
+}
+
+/* ==========================================================================
+   TOAST DE BITÁCORA DE COMBATE
+   ========================================================================== */
+.combat-log-toast {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(10, 18, 28, 0.92);
+  border: 1px solid var(--brass-gold);
+  border-left: 5px solid var(--brass-gold);
+  border-radius: 4px;
+  padding: 12px 24px;
+  color: var(--paper-parchment);
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  letter-spacing: 0.8px;
+  box-shadow: var(--shadow-dramatic);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: all 0.35s ease;
+  pointer-events: none;
+  z-index: 100;
+  text-align: center;
+  max-width: 650px;
+}
+
+.combat-log-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================================================
+   PANTALLA DE GAME OVER (MUERTE SÚBITA DRAMÁTICA)
+   ========================================================================== */
+.modal-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5, 7, 10, 0.88);
+  backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-screen.hidden, .hidden {
+  display: none !important;
+}
+
+.game-over-box {
+  background: linear-gradient(180deg, #180a0a 0%, #0d0606 100%);
+  border: 2px solid var(--danger-crimson);
+  box-shadow: 0 0 45px rgba(192, 41, 43, 0.75), var(--shadow-dramatic);
+  max-width: 640px;
+  width: 100%;
+  border-radius: 8px;
+  padding: 32px 36px;
+  text-align: center;
+  position: relative;
+  animation: zoom-in 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+@keyframes zoom-in {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.skull-banner {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.game-over-title {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ff4d4d;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255, 77, 77, 0.6);
+  margin-bottom: 6px;
+}
+
+.game-over-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+.answers-review-container {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.review-row {
+  margin-bottom: 12px;
+}
+
+.review-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.review-label.wrong { color: #ff6b6b; }
+.review-label.correct { color: #51cf66; }
+.review-label.info { color: var(--brass-bright); }
+
+.review-content {
+  font-size: 0.92rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  padding-left: 6px;
+  border-left: 2px solid;
+}
+
+.review-content.wrong {
+  border-color: #ff6b6b;
+  color: #ffc9c9;
+}
+
+.review-content.correct {
+  border-color: #51cf66;
+  color: #d3f9d8;
+  font-weight: 600;
+}
+
+.review-content.info {
+  border-color: var(--brass-gold);
+  color: var(--paper-parchment);
+}
+
+.btn-primary-action {
+  background: linear-gradient(180deg, #c0292b 0%, #851314 100%);
+  color: #ffffff;
+  border: 1px solid #ff7b7b;
+  padding: 14px 28px;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(192, 41, 43, 0.5);
+  width: 100%;
+}
+
+.btn-primary-action:hover {
+  background: linear-gradient(180deg, #e74c3c 0%, #a91b1d 100%);
+  box-shadow: 0 0 25px rgba(231, 76, 60, 0.8);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   PANTALLA DE VICTORIA
+   ========================================================================== */
+.victory-box {
+  background: linear-gradient(180deg, #101c29 0%, #081018 100%);
+  border: 2px solid var(--brass-bright);
+  box-shadow: var(--shadow-dramatic), 0 0 40px rgba(212, 175, 55, 0.6);
+  max-width: 660px;
+  width: 100%;
+  border-radius: 8px;
+  padding: 36px 40px;
+  text-align: center;
+  animation: zoom-in 0.4s ease;
+}
+
+.laurel-icon {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+
+.victory-title {
+  font-family: var(--font-serif);
+  font-size: 2.1rem;
+  font-weight: 900;
+  color: var(--brass-bright);
+  letter-spacing: 2.5px;
+  text-shadow: var(--gold-glow);
+  margin-bottom: 12px;
+}
+
+.victory-summary {
+  font-size: 1.0rem;
+  line-height: 1.6;
+  color: var(--paper-parchment);
+  margin-bottom: 28px;
+}
+
+.btn-victory-action {
+  background: linear-gradient(180deg, #d4af37 0%, #9a781b 100%);
+  color: #0b151e;
+  border: 1px solid #fae69e;
+  padding: 14px 28px;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: var(--gold-glow);
+  width: 100%;
+}
+
+.btn-victory-action:hover {
+  background: linear-gradient(180deg, #f3cf65 0%, #b89129 100%);
+  box-shadow: 0 0 30px rgba(243, 207, 101, 0.9);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   MODAL DE BRIEFING HISTÓRICO
+   ========================================================================== */
+.briefing-box {
+  background: var(--navy-glass);
+  border: 2px solid var(--brass-gold);
+  box-shadow: var(--shadow-dramatic);
+  max-width: 620px;
+  width: 100%;
+  border-radius: 6px;
+  padding: 30px 34px;
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+
+.briefing-title {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--brass-bright);
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+
+.briefing-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  margin-bottom: 18px;
+}
+
+.briefing-text {
+  font-size: 0.96rem;
+  line-height: 1.6;
+  color: var(--paper-parchment);
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+/* ==========================================================================
+   MODAL DE GESTIÓN Y BANCO DE PREGUNTAS
+   ========================================================================== */
+.questions-manager-box {
+  background: var(--navy-glass);
+  border: 2px solid var(--brass-gold);
+  border-radius: 8px;
+  box-shadow: var(--shadow-dramatic);
+  max-width: 820px;
+  width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+}
+
+.modal-header {
+  padding: 16px 22px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-family: var(--font-serif);
+  color: var(--brass-bright);
+  font-size: 1.25rem;
+  letter-spacing: 1px;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.btn-close-modal:hover {
+  color: var(--chile-red);
+}
+
+.modal-body-scrollable {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.questions-section {
+  margin-bottom: 24px;
+}
+
+.section-badge {
+  font-family: var(--font-serif);
+  color: var(--brass-bright);
+  font-size: 1rem;
+  letter-spacing: 1px;
+  margin: 16px 0 10px 0;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  padding-bottom: 4px;
+}
+
+.question-row {
+  background: rgba(14, 26, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+}
+
+.question-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.q-number {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--brass-gold);
+  font-size: 0.9rem;
+}
+
+.btn-del {
+  background: rgba(192, 41, 43, 0.4);
+  border: 1px solid var(--danger-crimson);
+  color: #ffb3b3;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-del:hover {
+  background: var(--danger-crimson);
+  color: #fff;
+}
+
+.q-body {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.q-correct-preview {
+  font-size: 0.8rem;
+  color: var(--brass-bright);
+}
+
+/* Formulario para agregar preguntas */
+.add-question-box {
+  background: rgba(8, 15, 24, 0.8);
+  border: 1px solid var(--brass-dark);
+  border-radius: 6px;
+  padding: 18px;
+  margin-top: 20px;
+}
+
+.add-question-box h4 {
+  font-family: var(--font-serif);
+  color: var(--brass-bright);
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brass-gold);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.form-control {
+  width: 100%;
+  background: rgba(18, 30, 44, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: 3px;
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--brass-bright);
+  box-shadow: 0 0 8px rgba(243, 207, 101, 0.35);
+}
+
+.options-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.btn-secondary {
+  background: rgba(30, 45, 60, 0.8);
+  border: 1px solid var(--brass-dark);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.btn-submit {
+  background: linear-gradient(180deg, #d4af37 0%, #9a781b 100%);
+  border: 1px solid #fae69e;
+  color: #0b151e;
+  font-weight: 800;
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
