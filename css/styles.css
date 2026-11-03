@@ -564,6 +564,32 @@ button, input, select, textarea, .interactive {
   transform: translateY(-2px);
 }
 
+.btn-secondary-action {
+  background: rgba(18, 30, 45, 0.9);
+  color: var(--paper-parchment);
+  border: 1.5px solid var(--brass-gold);
+  padding: 12px 24px;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  width: 100%;
+  margin-top: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.btn-secondary-action:hover {
+  background: rgba(30, 52, 78, 0.98);
+  border-color: var(--brass-bright);
+  color: var(--brass-bright);
+  box-shadow: var(--gold-glow);
+  transform: translateY(-2px);
+}
+
 /* ==========================================================================
    PANTALLA DE VICTORIA
    ========================================================================== */

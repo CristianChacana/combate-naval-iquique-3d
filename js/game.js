@@ -184,6 +184,30 @@ class NavalBattleGame {
       });
     }
 
+    // Botones de Volver al Inicio / Empezar de Nuevo (Dentro del juego y al final)
+    const homeBtn = document.getElementById('home-btn');
+    if (homeBtn) {
+      homeBtn.addEventListener('click', () => {
+        if (confirm('¿Deseas volver al inicio y reiniciar la campaña naval desde el comienzo?')) {
+          this.restartCampaign();
+        }
+      });
+    }
+
+    const goHomeBtn = document.getElementById('go-home-btn');
+    if (goHomeBtn) {
+      goHomeBtn.addEventListener('click', () => {
+        this.restartCampaign();
+      });
+    }
+
+    const vicHomeBtn = document.getElementById('vic-home-btn');
+    if (vicHomeBtn) {
+      vicHomeBtn.addEventListener('click', () => {
+        this.restartCampaign();
+      });
+    }
+
     // Selector de escenario rápido
     document.querySelectorAll('.scenario-select-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -762,6 +786,11 @@ class NavalBattleGame {
 
   retryCurrentScenario() {
     this.loadScenario(this.currentScenario);
+  }
+
+  restartCampaign() {
+    this.gameMode = 'campaign';
+    this.loadScenario('punta_gruesa');
   }
 
   // -------------------------------------------------------------

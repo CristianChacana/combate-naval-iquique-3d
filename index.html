@@ -91,8 +91,11 @@
 
     <!-- Barra Inferior: Controles de Cámara, Audio y Banco de Preguntas -->
     <footer class="hud-bottom-bar">
-      <!-- Selector de Escenario Rápido -->
+      <!-- Selector de Escenario Rápido e Inicio -->
       <div class="hud-group">
+        <button id="home-btn" class="hud-btn" title="Volver al inicio de la campaña histórica">
+          🏠 Inicio
+        </button>
         <span id="question-progress" class="stage-badge">Etapa 1 de 7</span>
         <button class="hud-btn scenario-select-btn" data-scenario="punta_gruesa">
           ⚓ Punta Gruesa
@@ -164,7 +167,10 @@
       </div>
 
       <button id="retry-btn" class="btn-primary-action">
-        🔄 REINTENTAR COMBATE (MUERTE SÚBITA)
+        🔄 REINTENTAR ESTE COMBATE
+      </button>
+      <button id="go-home-btn" class="btn-secondary-action">
+        🏠 VOLVER AL INICIO (ACTO 1)
       </button>
     </div>
   </div>
@@ -177,6 +183,9 @@
       <div id="vic-summary" class="victory-summary" style="white-space: pre-line;"></div>
       <button id="next-scenario-btn" class="btn-victory-action">
         CONTINUAR AL SIGUIENTE COMBATE
+      </button>
+      <button id="vic-home-btn" class="btn-secondary-action">
+        🏠 VOLVER AL INICIO (EMPEZAR DE NUEVO)
       </button>
     </div>
   </div>
