@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- ====================================================================
+       CABECERAS DE SEGURIDAD (DEFENSA EN PROFUNDIDAD)
+       ==================================================================== -->
+  <!-- 1. Content Security Policy (CSP): Scripts locales estrictos, previene XSS y robo de datos -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
+  <!-- 2. Prevención de Clickjacking -->
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <!-- 3. Prevención de MIME Sniffing -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <!-- 4. Política de Referrer: No filtrar rutas locales -->
+  <meta name="referrer" content="no-referrer">
+  <!-- 5. Política de Permisos: Mínimo privilegio, sin acceso a hardware innecesario -->
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
+
+  <title>Combate Naval de Iquique y Punta Gruesa 3D (1879) | Muerte Súbita</title>
+  
+  <!-- Tipografías -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Estilos del Juego -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Contenedor WebGL para la escena 3D -->
+  <div id="canvas-container"></div>
+
+  <!-- Capa de Interfaz de Usuario (HUD) -->
+  <div class="ui-overlay">
+    
+    <!-- Barra Superior: Estado de los Buques y Batalla -->
+    <header class="hud-top-bar">
+      <!-- Buque Chileno -->
+      <div class="ship-status-widget">
+        <div class="ship-info-header">
+          <span class="flag-icon">🇨🇱</span>
+          <span id="player-name" class="ship-name-label">Goleta Covadonga (C. Condell)</span>
+        </div>
+        <div class="health-meter-frame">
+          <div id="player-health-bar" class="health-meter-fill player-fill"></div>
+        </div>
+      </div>
+
+      <!-- Centro: Título y Aviso de Muerte Súbita -->
+      <div class="hud-center-brand">
+        <h1 id="battle-title" class="main-title">COMBATE DE PUNTA GRUESA</h1>
+        <div class="battle-meta-subtitle">21 DE MAYO DE 1879 • GUERRA DEL PACÍFICO</div>
+        <div class="sudden-death-pill">🛡️ RESISTENCIA DEL CASCO: 2 IMPACTOS</div>
+      </div>
+
+      <!-- Buque Peruano -->
+      <div class="ship-status-widget enemy">
+        <div class="ship-info-header">
+          <span id="enemy-name" class="ship-name-label">Fragata Independencia (J. Moore)</span>
+          <span class="flag-icon">🇵🇪</span>
+        </div>
+        <div class="health-meter-frame">
+          <div id="enemy-health-bar" class="health-meter-fill enemy-fill"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Toast de Bitácora de Combate -->
+    <div id="combat-log-toast" class="combat-log-toast hidden">
+      ¡Covadonga abre fuego con su cañón de 70 libras!
+    </div>
+
+    <!-- Cuadro Central de Preguntas Tácticas (Muerte Súbita) -->
+    <div class="question-container-wrapper">
+      <div id="question-box" class="question-box hidden">
+        <div class="question-header">
+          <div id="q-header-title" class="question-category">MANIOBRA TÁCTICA</div>
+          <div class="question-timer-hint">RESPONDE CON PRECISIÓN HISTÓRICA</div>
+        </div>
+        <div id="q-prompt-text" class="question-prompt">
+          Cargando maniobra histórica...
+        </div>
+        <div id="q-options-container" class="options-grid">
+          <!-- Opciones inyectadas dinámicamente de forma segura -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra Inferior: Controles de Cámara, Audio y Banco de Preguntas -->
+    <footer class="hud-bottom-bar">
+      <!-- Selector de Escenario Rápido -->
+      <div class="hud-group">
+        <span id="question-progress" class="stage-badge">Etapa 1 de 7</span>
+        <button class="hud-btn scenario-select-btn" data-scenario="punta_gruesa">
+          ⚓ Punta Gruesa
+        </button>
+        <button class="hud-btn scenario-select-btn" data-scenario="iquique">
+          ⚔️ Rada de Iquique
+        </button>
+      </div>
+
+      <!-- Controles de Cámara -->
+      <div class="hud-group">
+        <button class="hud-btn cam-btn active" data-cam="cinematic">
+          🎬 Cinemática
+        </button>
+        <button class="hud-btn cam-btn" data-cam="orbit">
+          🔄 Libre / Órbita 360°
+        </button>
+        <button class="hud-btn cam-btn" data-cam="deck">
+          🔭 Vista Puente / Alcázar
+        </button>
+      </div>
+
+      <!-- Audio y Gestor de Preguntas -->
+      <div class="hud-group">
+        <button id="mute-btn" class="hud-btn">
+          🔊 Silenciar
+        </button>
+        <button id="open-questions-btn" class="hud-btn">
+          📜 Banco de Preguntas
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MODAL: Briefing Histórico Inicial -->
+  <div id="briefing-modal" class="modal-screen">
+    <div class="briefing-box">
+      <h2 id="briefing-title" class="briefing-title">COMBATE NAVAL DE IQUIQUE</h2>
+      <div id="briefing-subtitle" class="briefing-subtitle">21 de Mayo de 1879</div>
+      <div id="briefing-text" class="briefing-text" style="white-space: pre-line;">
+        Cargando antecedentes históricos del combate...
+      </div>
+      <button id="briefing-start-btn" class="btn-primary-action" onclick="if(window.game) window.game.dismissBriefing();">
+        ¡ZAFARRANCHO DE COMBATE! (INICIAR)
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: GAME OVER (Muerte Súbita al 1er Fallo) -->
+  <div id="game-over-screen" class="modal-screen hidden">
+    <div class="game-over-box">
+      <div class="skull-banner">💥</div>
+      <h2 class="game-over-title">¡MISIÓN FALLIDA!</h2>
+      <div class="game-over-subtitle">EL BUQUE HA SIDO HUNDIDO TRAS RECIBIR 2 CAÑONAZOS CRÍTICOS ENEMIGOS</div>
+      
+      <div class="answers-review-container">
+        <div class="review-row">
+          <div class="review-label wrong">Tu Respuesta (Errónea):</div>
+          <div id="go-wrong-text" class="review-content wrong"></div>
+        </div>
+        <div class="review-row">
+          <div class="review-label correct">Respuesta Histórica Correcta:</div>
+          <div id="go-correct-text" class="review-content correct"></div>
+        </div>
+        <div class="review-row">
+          <div class="review-label info">Contexto Histórico:</div>
+          <div id="go-explanation" class="review-content info"></div>
+        </div>
+      </div>
+
+      <button id="retry-btn" class="btn-primary-action">
+        🔄 REINTENTAR COMBATE (MUERTE SÚBITA)
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Victoria Histórica -->
+  <div id="victory-screen" class="modal-screen hidden">
+    <div class="victory-box">
+      <div class="laurel-icon">🏆</div>
+      <h2 id="vic-title" class="victory-title">¡HAZAÑA HISTÓRICA!</h2>
+      <div id="vic-summary" class="victory-summary" style="white-space: pre-line;"></div>
+      <button id="next-scenario-btn" class="btn-victory-action">
+        CONTINUAR AL SIGUIENTE COMBATE
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: Gestor y Editor del Banco de Preguntas -->
+  <div id="questions-modal" class="modal-screen hidden">
+    <div class="questions-manager-box">
+      <div class="modal-header">
+        <h3>Banco y Editor de Preguntas Históricas</h3>
+        <button id="close-questions-btn" class="btn-close-modal">&times;</button>
+      </div>
+
+      <div class="modal-body-scrollable">
+        <p style="font-size:0.88rem; color:var(--text-secondary); margin-bottom:14px;">
+          Aquí puedes revisar todas las preguntas activas del juego, añadir tus propias preguntas personalizadas o eliminarlas. Todo se valida e higieniza contra inyecciones y se guarda en tu navegador.
+        </p>
+
+        <!-- Lista de preguntas existentes -->
+        <div id="questions-items-list" class="questions-section"></div>
+
+        <!-- Formulario para agregar una nueva pregunta -->
+        <div class="add-question-box">
+          <h4>➕ Agregar Nueva Pregunta Personalizada</h4>
+          <form id="add-question-form">
+            <div class="form-group">
+              <label for="q-scenario">Escenario Histórico</label>
+              <select id="q-scenario" class="form-control" required>
+                <option value="punta_gruesa">Punta Gruesa (Covadonga vs Independencia)</option>
+                <option value="iquique">Rada de Iquique (Esmeralda vs Huáscar)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="q-title">Título / Fase Táctica</label>
+              <input type="text" id="q-title" class="form-control" maxlength="100" placeholder="Ej: Artillería de la Covadonga" required>
+            </div>
+
+            <div class="form-group">
+              <label for="q-text">Pregunta</label>
+              <textarea id="q-text" class="form-control" rows="2" maxlength="500" placeholder="Escribe el texto de la pregunta..." required></textarea>
+            </div>
+
+            <div class="options-form-grid">
+              <div class="form-group">
+                <label for="q-opt0">Opción A</label>
+                <input type="text" id="q-opt0" class="form-control" maxlength="200" placeholder="Opción A" required>
+              </div>
+              <div class="form-group">
+                <label for="q-opt1">Opción B</label>
+                <input type="text" id="q-opt1" class="form-control" maxlength="200" placeholder="Opción B" required>
+              </div>
+              <div class="form-group">
+                <label for="q-opt2">Opción C</label>
+                <input type="text" id="q-opt2" class="form-control" maxlength="200" placeholder="Opción C" required>
+              </div>
+              <div class="form-group">
+                <label for="q-opt3">Opción D</label>
+                <input type="text" id="q-opt3" class="form-control" maxlength="200" placeholder="Opción D" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="q-correct">Opción Correcta</label>
+              <select id="q-correct" class="form-control" required>
+                <option value="0">Opción A</option>
+                <option value="1">Opción B</option>
+                <option value="2">Opción C</option>
+                <option value="3">Opción D</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="q-explanation">Explicación Histórica</label>
+              <textarea id="q-explanation" class="form-control" rows="2" maxlength="1000" placeholder="Explica el hecho histórico real..." required></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" id="reset-questions-btn" class="btn-secondary">Restablecer Preguntas por Defecto</button>
+              <button type="submit" class="btn-submit">Guardar Pregunta</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       SCRIPTS 100% LOCALES (Cero Dependencias de Red o CDN Externas)
+       Inmunes a Bloqueos de Red, Ataques de Cadena de Suministro o Caídas de CDN
+       ==================================================================== -->
+  <script src="js/three.min.js"></script>
+  <script src="js/OrbitControls.js"></script>
+  <script src="js/security.js"></script>
+  <script src="js/questions.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/ships.js"></script>
+  <script src="js/environment.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
